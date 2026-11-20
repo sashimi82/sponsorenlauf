@@ -153,11 +153,56 @@
 
   .setup input{width:100%;border:1px solid var(--line);border-radius:10px;padding:10px;margin:4px 0 10px;font-size:14px}
   .setup label{font-size:13px;color:var(--muted)}
+
+  /* ---- Kompaktes Layout: alles auf einen Blick ---- */
+  html,body{height:100%}
+  body{display:flex;flex-direction:column;height:100vh;height:100dvh;overflow:hidden}
+  header{position:static;flex:none;padding:calc(env(safe-area-inset-top) + 7px) 14px 7px}
+  .clublogo{height:24px}
+  .brand span{display:none}
+  main{flex:1 1 auto;min-height:0;overflow:auto;width:100%;padding:10px 10px 14px;-webkit-overflow-scrolling:touch}
+  nav{position:static;flex:none;padding-top:4px}
+  nav button{padding:5px 4px}
+  #toast{bottom:calc(env(safe-area-inset-bottom) + 86px)}
+  #v-count:not([hidden]){display:flex;flex-direction:column;height:100%;min-height:330px}
+  #v-count .seg button{padding:4px 10px;font-size:13px}
+  #v-count .search{padding:5px 10px;font-size:15px}
+  .grid{flex:1 1 0;min-height:76px;max-height:none;margin:6px 0;align-content:start;gap:5px;
+    grid-template-columns:repeat(auto-fill,minmax(78px,1fr));grid-auto-rows:34px}
+  .pl .nm i{vertical-align:baseline;line-height:1}
+  .pl{height:34px;min-height:0;padding:0 26px 0 7px;display:flex;align-items:center;align-self:start;border-radius:9px;line-height:1.2}
+  .pl .nm{-webkit-line-clamp:1;padding-right:0;font-size:13.5px}
+  .pl .ct{right:4px;min-width:20px;height:20px;font-size:11px}
+  .pl .nm i{font-style:normal;font-size:11px;opacity:.6;margin-right:4px}
+  .pl .ct{top:50%;transform:translateY(-50%)}
+  #panel{flex:none;padding:10px}
+  .who{gap:8px}
+  .who-l{min-width:0;flex:1}
+  .who-name{font-size:19px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .who-sub{font-size:12px;margin-top:1px}
+  .big{padding:3px 10px;min-width:64px;border-radius:10px}
+  .big b{font-size:24px}
+  .big span{font-size:9px}
+  .goal{aspect-ratio:2/1;width:100%;max-width:max(240px,calc((100dvh - 495px) * 2));margin:8px auto 0;border-width:7px;border-bottom-width:6px}
+  .hole{font-size:clamp(13px,4.2vw,22px);border-width:2px}
+  .actions{display:flex;gap:8px;margin-top:8px}
+  .btn.miss{flex:1;width:auto;padding:13px 10px;font-size:17px}
+  .undo2{flex:none;width:70px;border:1px solid var(--line);background:#f1f1ec;border-radius:12px;font-size:20px;line-height:1;color:var(--ink);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px}
+  .undo2 small{font-size:11px;color:var(--muted)}
+  .undo2:disabled{opacity:.35}
+  /* Übersicht */
+  .sortbar{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin:0 0 8px}
+  .sortbar button{border:1px solid var(--line);background:#fff;border-radius:999px;padding:6px 12px;font-size:13px}
+  .sortbar button.on{background:var(--ink);color:#fff;border-color:var(--ink);font-weight:600}
+  th.sortable{cursor:pointer;text-decoration:underline dotted #aaa;text-underline-offset:3px}
+  th.sortable.on{color:var(--ink)}
+  .dl{flex-wrap:wrap}.dl .btn{flex:1 1 140px}
+  .selbox{width:100%;border:1px solid var(--line);border-radius:10px;padding:10px;margin:4px 0;background:#fff;font-size:16px}
 </style>
 </head>
 <body>
 <header>
-  <div class="brand"><img class="clublogo" src="logo-white.png" alt="Unihockey Tösstal"><span>Sponsorenlauf · Rundenzähler</span></div>
+  <div class="brand"><img class="clublogo" src="logo-white.png" alt="Unihockey Tösstal"><span>Rundenzähler</span></div>
   <div class="status"><i class="dot" id="dot"></i><span id="stxt">Lädt…</span></div>
 </header>
 
@@ -188,15 +233,17 @@
     <div class="card" id="panel"></div>
   </section>
 
-  <!-- RANGLISTE -->
+  <!-- ÜBERSICHT -->
   <section id="v-rank" hidden>
     <div class="sum" id="sum"></div>
+    <div class="sortbar" id="sortBar"></div>
     <div id="rankWrap"></div>
     <div class="dl">
-      <button class="btn" id="pdfBtn">PDF herunterladen</button>
-      <button class="btn ghost" id="csvBtn">CSV herunterladen</button>
+      <button class="btn" id="pdfBtn">PDF Rangliste</button>
+      <button class="btn" id="pdfOneBtn">PDF je Spieler:in</button>
+      <button class="btn ghost" id="csvBtn">CSV (Excel)</button>
     </div>
-    <p class="muted">Runden gesamt = (gelaufene Runden × Rundenlänge + Bonus-Meter) ÷ Rundenlänge, abgerundet. Tippe eine Zeile an, um zu dieser Person zu springen.</p>
+    <p class="muted">Runden gesamt = (gelaufene Runden × Rundenlänge + Bonus-Meter) ÷ Rundenlänge, abgerundet. Rang = Platz nach Total Meter. Tippe eine Zeile an, um zu dieser Person zu springen.</p>
   </section>
 
   <!-- SPIELER:INNEN -->
@@ -232,7 +279,7 @@
 
 <nav id="nav">
   <button data-v="count" class="on"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>Zählen</button>
-  <button data-v="rank"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 20V10M12 20V4M18 20v-7"/></svg>Rangliste</button>
+  <button data-v="rank"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 20V10M12 20V4M18 20v-7"/></svg>Übersicht</button>
   <button data-v="players"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c.8-3.6 3.4-5.5 6.5-5.5s5.7 1.9 6.5 5.5"/><path d="M16 4.5a3.5 3.5 0 0 1 0 7M18 14.8c1.9.7 3.1 2.4 3.5 5.2"/></svg>Spieler:innen</button>
 </nav>
 
@@ -258,8 +305,8 @@ const T_BACK = Object.fromEntries(Object.entries(T).map(([k, v]) => [v, k]));
 
 /* Torwand wie auf dem Foto: x/y = Mitte in % der Torbreite/-höhe, w = Durchmesser in % der Breite */
 const HOLES = [
-  {b:180,x:11,y:17,w:16},{b:90,x:36,y:39,w:19},{b:90,x:66,y:24,w:19},
-  {b:180,x:89,y:16,w:16},{b:60,x:24,y:72,w:22},{b:30,x:73,y:66,w:26}
+  {b:180,x:10,y:21,w:14},{b:90,x:33,y:41,w:17},{b:90,x:65,y:27,w:17},
+  {b:180,x:90,y:21,w:14},{b:60,x:22,y:72,w:19},{b:30,x:72,y:66,w:22}
 ];
 const BONUS_OK = [0,30,60,90,180];
 const POLL_MS = 20000;
@@ -278,7 +325,7 @@ const DEVICE = ls.get('slauf-device', null) || (() => { const d = rid(); ls.set(
 const S = {
   sb:null, players:new Map(), laps:new Map(), cfg:{lapMeters:180},
   sel: ls.get('slauf-sel', null), view:'count', filter: ls.get('slauf-filter','all'), q:'',
-  mine: new Set(ls.get('slauf-mine', [])), lock:false, loaded:false,
+  mine: new Set(ls.get('slauf-mine', [])), sort: ls.get('slauf-sort', {k:'name', dir:'asc'}), lock:false, loaded:false,
   net:'connecting',            // connecting | live | poll | offline
   queue: ls.get('slauf-queue', []), flushing:false
 };
@@ -484,7 +531,7 @@ function renderCount(st){
   if (S.q){ const q = S.q.toLowerCase(); list = list.filter(p => (p.name + ' ' + p.nr).toLowerCase().includes(q)); }
   grid.innerHTML = list.length ? list.map(p => {
     const s = st.get(p.id);
-    return `<button class="pl${p.id === S.sel ? ' sel' : ''}" data-id="${esc(p.id)}"><span class="nm">${esc(p.name)}</span><span class="nr">${p.nr ? '#' + esc(p.nr) : '&nbsp;'}</span><span class="ct">${s.laps}</span></button>`;
+    return `<button class="pl${p.id === S.sel ? ' sel' : ''}" data-id="${esc(p.id)}"><span class="nm">${p.nr ? `<i>${esc(p.nr)}</i>` : ''}${esc(p.name)}</span><span class="ct">${s.laps}</span></button>`;
   }).join('') : `<div class="muted" style="grid-column:1/-1;padding:8px">${S.filter === 'mine' && !S.mine.size ? 'Noch niemand als «Meine» markiert – im Tab Spieler:innen mit ☆ auswählen.' : 'Keine Treffer.'}</div>`;
 
   const p = S.players.get(S.sel);
@@ -494,25 +541,28 @@ function renderCount(st){
   const t = last ? new Date(last.t).toLocaleTimeString('de-CH', {hour:'2-digit', minute:'2-digit'}) : '';
   panel.innerHTML = `
     <div class="who">
-      <div><div class="who-name">${esc(p.name)} ${p.nr ? `<small>#${esc(p.nr)}</small>` : ''}</div>
-      <div class="who-sub">${last ? `Letzte Runde ${t}${last.b ? ' · +' + last.b + ' m' : ' · kein Treffer'}` : 'Noch keine Runde'}</div></div>
+      <div class="who-l">
+        <div class="who-name">${esc(p.name)}${p.nr ? ` <small>#${esc(p.nr)}</small>` : ''}</div>
+        <div class="who-sub">Bonus ${fmt(s.bonus)} m${last ? ` · zuletzt ${t}, ${last.b ? '+' + last.b + ' m' : 'kein Treffer'}` : ''}</div>
+      </div>
       <div class="big"><b>${s.laps}</b><span>Runden</span></div>
-    </div>
-    <div class="meters">
-      <span class="pill">Runden ${fmt(s.lapM)} m</span>
-      <span class="pill">Bonus ${fmt(s.bonus)} m</span>
-      <span class="pill strong">Total ${fmt(s.total)} m</span>
-      <span class="pill lime">= ${s.allLaps} Runden gesamt</span>
     </div>
     <div class="goal" id="goal">
       ${HOLES.map(h => `<button class="hole" data-b="${h.b}" style="left:${h.x}%;top:${h.y}%;width:${h.w}%" aria-label="Treffer ${h.b} Meter">${h.b}<small>m</small></button>`).join('')}
       <span class="tag">SUPERWALL</span>
     </div>
-    <div class="hint">Treffer antippen = Runde + Bonus-Meter</div>
-    <button class="btn miss" data-b="0">+1 Runde · kein Treffer</button>
-    ${last ? `<button class="undo" id="undo">↶ Letzten Eintrag löschen (Runde ${s.laps}${last.b ? ', +' + last.b + ' m' : ''}, ${t})</button>` : ''}`;
+    <div class="actions">
+      <button class="btn miss" data-b="0">+1 Runde · kein Treffer</button>
+      <button class="undo2" id="undo"${last ? '' : ' disabled'} aria-label="Letzten Eintrag löschen">↶<small>Zurück</small></button>
+    </div>`;
 }
 
+/* ---------- Übersicht ---------- */
+const SORTS = {
+  name:   {label:'Name',          def:'asc',  val:r => r.p.name},
+  allLaps:{label:'Runden gesamt', def:'desc', val:r => r.s.allLaps},
+  bonus:  {label:'Bonus m',       def:'desc', val:r => r.s.bonus}
+};
 function rankedRows(st){
   const rows = sortedPlayers().map(p => ({p, s:st.get(p.id)}))
     .sort((a, b) => b.s.total - a.s.total || b.s.laps - a.s.laps || byName(a.p, b.p));
@@ -520,20 +570,38 @@ function rankedRows(st){
   rows.forEach((r, i) => { if (prev === null || r.s.total !== prev) rank = i + 1; prev = r.s.total; r.rank = rank; });
   return rows;
 }
+function overviewRows(st){
+  const rows = rankedRows(st);
+  const {k, dir} = S.sort, f = SORTS[k] || SORTS.name, m = dir === 'asc' ? 1 : -1;
+  return rows.sort((a, b) => {
+    if (k === 'name') return m * byName(a.p, b.p);
+    return m * (f.val(a) - f.val(b)) || byName(a.p, b.p);
+  });
+}
 
 function renderRank(st){
-  const rows = rankedRows(st);
+  const rows = overviewRows(st);
   const totLaps = rows.reduce((a, r) => a + r.s.laps, 0), totAll = rows.reduce((a, r) => a + r.s.allLaps, 0);
   $('#sum').innerHTML = `<div><b>${rows.length}</b><span>Spieler:innen</span></div><div><b>${fmt(totLaps)}</b><span>Runden gelaufen</span></div><div><b>${fmt(totAll)}</b><span>Runden gesamt</span></div>`;
+  const arrow = S.sort.dir === 'asc' ? '▲' : '▼';
+  $('#sortBar').innerHTML = `<span class="muted">Sortieren:</span>` + Object.entries(SORTS).map(([k, f]) =>
+    `<button data-sort="${k}" class="${S.sort.k === k ? 'on' : ''}">${f.label}${S.sort.k === k ? ' ' + (k === 'name' ? (S.sort.dir === 'asc' ? 'A–Z' : 'Z–A') : arrow) : ''}</button>`).join('');
   if (!rows.length){ $('#rankWrap').innerHTML = `<div class="empty"><b>Noch keine Daten</b></div>`; return; }
-  $('#rankWrap').innerHTML = `<table><thead><tr><th>#</th><th>Name</th><th>Runden<br>gelaufen</th><th>Bonus<br>m</th><th>Total<br>m</th><th>Runden<br>gesamt</th></tr></thead><tbody>` +
-    rows.map(r => `<tr class="click${r.rank === 1 && r.s.total > 0 ? ' top1' : ''}" data-id="${esc(r.p.id)}"><td>${r.rank}</td><td>${esc(r.p.name)}${r.p.nr ? ` <span class="muted">#${esc(r.p.nr)}</span>` : ''}</td><td>${r.s.laps}</td><td>${fmt(r.s.bonus)}</td><td>${fmt(r.s.total)}</td><td class="all">${r.s.allLaps}</td></tr>`).join('') +
+  const th = (k, html) => `<th${SORTS[k] ? ` data-sort="${k}" class="sortable${S.sort.k === k ? ' on' : ''}"` : ''}>${html}${S.sort.k === k && k !== 'name' ? ' ' + arrow : ''}</th>`;
+  $('#rankWrap').innerHTML = `<table><thead><tr><th>Rang</th>${th('name', 'Name')}<th>Runden<br>gelaufen</th>${th('bonus', 'Bonus<br>m')}<th>Total<br>m</th>${th('allLaps', 'Runden<br>gesamt')}</tr></thead><tbody>` +
+    rows.map(r => `<tr class="click" data-id="${esc(r.p.id)}"><td>${r.rank}</td><td>${esc(r.p.name)}${r.p.nr ? ` <span class="muted">#${esc(r.p.nr)}</span>` : ''}</td><td>${r.s.laps}</td><td>${fmt(r.s.bonus)}</td><td>${fmt(r.s.total)}</td><td class="all">${r.s.allLaps}</td></tr>`).join('') +
     `</tbody></table>`;
+}
+function setSort(k){
+  if (!SORTS[k]) return;
+  S.sort = S.sort.k === k ? {k, dir:S.sort.dir === 'asc' ? 'desc' : 'asc'} : {k, dir:SORTS[k].def};
+  ls.set('slauf-sort', S.sort); renderAll();
 }
 
 /* ---------- Export: CSV und PDF ---------- */
 const fileDate = () => { const d = new Date(), z = n => String(n).padStart(2, '0'); return `${d.getFullYear()}-${z(d.getMonth() + 1)}-${z(d.getDate())}`; };
 const standText = () => new Date().toLocaleString('de-CH', {day:'2-digit', month:'2-digit', year:'numeric', hour:'2-digit', minute:'2-digit'});
+const slug = s => String(s).toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') || 'spielerin';
 function saveBlob(blob, name){
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a'); a.href = url; a.download = name; a.rel = 'noopener';
@@ -542,12 +610,12 @@ function saveBlob(blob, name){
 }
 
 function downloadCsv(){
-  const rows = rankedRows(stats());
+  const rows = overviewRows(stats());
   if (!rows.length){ toast('Noch keine Daten'); return; }
   const q = v => { v = String(v ?? ''); return /[;"\n\r]/.test(v) ? '"' + v.replace(/"/g, '""') + '"' : v; };
   const head = ['Rang','Name','Nr','Runden gelaufen','Rundenmeter','Bonusmeter','Total Meter','Runden gesamt','Treffer 180','Treffer 90','Treffer 60','Treffer 30','Ohne Treffer'];
   const lines = [head.map(q).join(';')].concat(rows.map(r => [r.rank, r.p.name, r.p.nr, r.s.laps, r.s.lapM, r.s.bonus, r.s.total, r.s.allLaps, r.s.h[180], r.s.h[90], r.s.h[60], r.s.h[30], r.s.h[0]].map(q).join(';')));
-  saveBlob(new Blob(['﻿' + lines.join('\r\n') + '\r\n'], {type:'text/csv;charset=utf-8'}), `sponsorenlauf-rangliste-${fileDate()}.csv`);
+  saveBlob(new Blob(['﻿' + lines.join('\r\n') + '\r\n'], {type:'text/csv;charset=utf-8'}), `sponsorenlauf-uebersicht-${fileDate()}.csv`);
   toast('CSV erstellt', 'ok');
 }
 
@@ -583,9 +651,8 @@ async function logoJpeg(){
   } catch(e){ return null; }
 }
 function buildPdf(pages, logo){
-  // pages: Array of content-stream strings (Latin-1 Zeichen)
   const enc = s => { const u = new Uint8Array(s.length); for (let i = 0; i < s.length; i++) u[i] = s.charCodeAt(i) & 255; return u; };
-  const objs = [];            // index = Objektnummer - 1
+  const objs = [];
   const add = parts => { objs.push(parts); return objs.length; };
   const catalog = add(null), pagesObj = add(null);
   const fR = add([enc('<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica /Encoding /WinAnsiEncoding >>')]);
@@ -613,72 +680,162 @@ function buildPdf(pages, logo){
   return new Blob(chunks, {type:'application/pdf'});
 }
 
+/* Zeichen-Helfer für A4-Seiten */
+function pdfDoc(logo){
+  const W = 595.28, H = 841.89, M = 40, RH = 19;
+  const d = {W, H, M, RH, logo, pages:[], c:'', y:M, foot:'Unihockey Tösstal · Sponsorenlauf'};
+  const col = g => g === 'white' ? '1 1 1' : g ? '0.42 0.42 0.4' : '0.07 0.07 0.06';
+  d.txt = (s, x, y, size, bold, g) => { d.c += `BT ${col(g)} rg /${bold ? 'F2' : 'F1'} ${size} Tf ${x.toFixed(2)} ${(H - y).toFixed(2)} Td ${pdfStr(s)} Tj ET\n`; };
+  d.txtC = (s, cx, y, size, bold, g) => d.txt(s, cx - textW(s, size, bold) / 2, y, size, bold, g);
+  d.txtR = (s, rx, y, size, bold, g) => d.txt(s, rx - textW(s, size, bold), y, size, bold, g);
+  d.rect = (x, y, w, h, rgb) => { d.c += `${rgb} rg ${x.toFixed(2)} ${(H - y - h).toFixed(2)} ${w.toFixed(2)} ${h.toFixed(2)} re f\n`; };
+  d.hline = (x1, x2, y, w = 1) => { d.c += `0.07 0.07 0.06 RG ${w} w ${x1.toFixed(2)} ${(H - y).toFixed(2)} m ${x2.toFixed(2)} ${(H - y).toFixed(2)} l S\n`; };
+  d.box = (x, y, w, h) => { d.c += `0.8 0.8 0.78 RG 0.8 w ${x.toFixed(2)} ${(H - y - h).toFixed(2)} ${w.toFixed(2)} ${h.toFixed(2)} re S\n`; };
+  d.image = (x, y, w) => { if (!logo) return 0; const h = w * logo.h / logo.w; d.c += `q ${w} 0 0 ${h.toFixed(2)} ${x} ${(H - y - h).toFixed(2)} cm /Im1 Do Q\n`; return h; };
+  d.newPage = () => { if (d.c) d.pages.push({c:d.c, foot:d.foot}); d.c = ''; d.y = M; };
+  d.room = h => d.y + h <= H - M - 24;
+  d.cell = (cols, i, s, x, y, bold, size = 10) => {
+    const c = cols[i], pad = 6; s = fitText(s, size, bold, c.w - pad * 2);
+    const w = textW(s, size, bold);
+    const tx = c.a === 'r' ? x + c.w - pad - w : c.a === 'c' ? x + (c.w - w) / 2 : x + pad;
+    d.txt(s, tx, y + RH / 2 + size * 0.35, size, bold);
+  };
+  d.head = (cols, x0) => {
+    const tw = cols.reduce((a, c) => a + c.w, 0);
+    d.rect(x0, d.y, tw, RH + 4, '0.067 0.067 0.063');
+    let x = x0;
+    cols.forEach(c => {
+      const s = fitText(c.t, 8.5, true, c.w - 10), w = textW(s, 8.5, true);
+      const tx = c.a === 'r' ? x + c.w - 6 - w : c.a === 'c' ? x + (c.w - w) / 2 : x + 6;
+      d.txt(s, tx, d.y + (RH + 4) / 2 + 3, 8.5, true, 'white');
+      x += c.w;
+    });
+    d.y += RH + 4;
+  };
+  // rows: Array von Arrays; opt: {x, hl: Spaltenindex hervorheben, bold: [Spalten], onBreak}
+  d.table = (cols, rows, opt = {}) => {
+    const x0 = opt.x ?? M, tw = cols.reduce((a, c) => a + c.w, 0);
+    d.head(cols, x0);
+    rows.forEach((r, i) => {
+      if (!d.room(RH)){ d.newPage(); if (opt.onBreak) opt.onBreak(); d.head(cols, x0); }
+      if (i % 2) d.rect(x0, d.y, tw, RH, '0.965 0.965 0.95');
+      if (opt.hl != null){ const hx = x0 + cols.slice(0, opt.hl).reduce((a, c) => a + c.w, 0); d.rect(hx, d.y, cols[opt.hl].w, RH, i % 2 ? '0.93 0.97 0.80' : '0.96 0.985 0.87'); }
+      let x = x0; r.forEach((v, k) => { d.cell(cols, k, v, x, d.y, (opt.bold || []).includes(k)); x += cols[k].w; });
+      d.y += RH;
+    });
+  };
+  d.finish = () => {
+    if (d.c) d.pages.push({c:d.c, foot:d.foot});
+    const n = d.pages.length;
+    return d.pages.map((p, i) => {
+      const r = `Seite ${i + 1} / ${n}`;
+      return p.c + `BT ${col(1)} rg /F1 8 Tf ${(W - M - textW(r, 8)).toFixed(2)} ${(M - 14).toFixed(2)} Td ${pdfStr(r)} Tj ET\n` +
+        `BT ${col(1)} rg /F1 8 Tf ${M} ${(M - 14).toFixed(2)} Td ${pdfStr(p.foot)} Tj ET\n`;
+    });
+  };
+  return d;
+}
+
 async function downloadPdf(){
   const st = stats(), rows = rankedRows(st);
   if (!rows.length){ toast('Noch keine Daten'); return; }
   toast('PDF wird erstellt…');
-  const logo = await logoJpeg();
-  const W = 595.28, H = 841.89, M = 40;
+  const logo = await logoJpeg(), d = pdfDoc(logo), M = d.M, num = n => fmt(n);
+  const lh = d.image(M, d.y, 190); if (lh) d.y += lh + 18;
+  d.txt('Sponsorenlauf für den Gothia Cup – Rangliste', M, d.y + 12, 16, true); d.y += 22;
+  d.txt(`Stand ${standText()} · Rundenlänge ${S.cfg.lapMeters} m · ${rows.length} Spieler:innen`, M, d.y + 10, 9.5, false, 1); d.y += 22;
   const cols = [
     {t:'Rang', w:36, a:'c'}, {t:'Name', w:170, a:'l'}, {t:'Nr.', w:34, a:'c'},
     {t:'Runden', w:60, a:'r'}, {t:'Bonus m', w:66, a:'r'}, {t:'Total m', w:70, a:'r'}, {t:'Runden gesamt', w:79.28, a:'r'}
   ];
-  const RH = 19, num = n => fmt(n);
-  const pages = []; let c = '', y = 0, pageNo = 0;
-  const txt = (s, x, yy, size, bold, gray) => { c += `BT ${gray ? '0.42 0.42 0.4 rg ' : '0.07 0.07 0.06 rg '}/${bold ? 'F2' : 'F1'} ${size} Tf ${x.toFixed(2)} ${(H - yy).toFixed(2)} Td ${pdfStr(s)} Tj ET\n`; };
-  const rect = (x, yy, w, h, rgb) => { c += `${rgb} rg ${x.toFixed(2)} ${(H - yy - h).toFixed(2)} ${w.toFixed(2)} ${h.toFixed(2)} re f\n`; };
-  const cell = (s, i, x, yy, bold, size = 10) => {
-    const col = cols[i], pad = 6, maxW = col.w - pad * 2;
-    s = fitText(s, size, bold, maxW);
-    const w = textW(s, size, bold);
-    const tx = col.a === 'r' ? x + col.w - pad - w : col.a === 'c' ? x + (col.w - w) / 2 : x + pad;
-    txt(s, tx, yy + RH / 2 + size * 0.35, size, bold);
-  };
-  const header = () => {
-    let x = M;
-    rect(M, y, W - 2 * M, RH + 4, '0.067 0.067 0.063');
-    cols.forEach((col, i) => {
-      const s = fitText(col.t, 8.5, true, col.w - 10), w = textW(s, 8.5, true);
-      const tx = col.a === 'r' ? x + col.w - 6 - w : col.a === 'c' ? x + (col.w - w) / 2 : x + 6;
-      c += `BT 1 1 1 rg /F2 8.5 Tf ${tx.toFixed(2)} ${(H - y - (RH + 4) / 2 - 3).toFixed(2)} Td ${pdfStr(s)} Tj ET\n`;
-      x += col.w;
-    });
-    y += RH + 4;
-  };
-  const newPage = first => {
-    if (c) pages.push(c);
-    c = ''; pageNo++; y = M;
-    if (first){
-      if (logo){ const lw = 190, lh = lw * logo.h / logo.w; c += `q ${lw} 0 0 ${lh.toFixed(2)} ${M} ${(H - M - lh).toFixed(2)} cm /Im1 Do Q\n`; y += lh + 18; }
-      txt('Sponsorenlauf für den Gothia Cup – Rangliste', M, y + 12, 16, true); y += 22;
-      txt(`Stand ${standText()} · Rundenlänge ${S.cfg.lapMeters} m · ${rows.length} Spieler:innen`, M, y + 10, 9.5, false, true); y += 22;
-    }
-    header();
-  };
-  newPage(true);
-  rows.forEach((r, i) => {
-    if (y + RH > H - M - 40) newPage(false);
-    if (i % 2) rect(M, y, W - 2 * M, RH, '0.965 0.965 0.95');
-    rect(M + cols.slice(0, 6).reduce((a, x) => a + x.w, 0), y, cols[6].w, RH, i % 2 ? '0.93 0.97 0.80' : '0.96 0.985 0.87');
-    const vals = [r.rank, r.p.name, r.p.nr, num(r.s.laps), num(r.s.bonus), num(r.s.total), num(r.s.allLaps)];
-    let x = M; vals.forEach((v, k) => { cell(v, k, x, y, k === 6 || k === 1); x += cols[k].w; });
-    y += RH;
-  });
-  // Totalzeile
-  if (y + RH + 4 > H - M - 30) newPage(false);
+  d.table(cols, rows.map(r => [r.rank, r.p.name, r.p.nr, num(r.s.laps), num(r.s.bonus), num(r.s.total), num(r.s.allLaps)]), {hl:6, bold:[1, 6]});
+  if (!d.room(d.RH + 30)) d.newPage();
   const sum = k => rows.reduce((a, r) => a + r.s[k], 0);
-  c += `0.07 0.07 0.06 RG 1 w ${M} ${(H - y).toFixed(2)} m ${W - M} ${(H - y).toFixed(2)} l S\n`;
-  y += 2;
-  const tv = ['', 'Total', '', num(sum('laps')), num(sum('bonus')), num(sum('total')), num(sum('allLaps'))];
-  let x = M; tv.forEach((v, k) => { cell(v, k, x, y, true); x += cols[k].w; });
-  y += RH + 10;
-  txt('Runden gesamt = (gelaufene Runden × Rundenlänge + Bonus-Meter) ÷ Rundenlänge, abgerundet.', M, y + 8, 8.5, false, true);
-  pages.push(c);
-  // Seitenzahlen
-  const n = pages.length;
-  const out = pages.map((p, i) => p + `BT 0.42 0.42 0.4 rg /F1 8 Tf ${(W - M - textW(`Seite ${i + 1} / ${n}`, 8)).toFixed(2)} ${(M - 14).toFixed(2)} Td ${pdfStr(`Seite ${i + 1} / ${n}`)} Tj ET\nBT 0.42 0.42 0.4 rg /F1 8 Tf ${M} ${(M - 14).toFixed(2)} Td ${pdfStr('Unihockey Tösstal · Sponsorenlauf')} Tj ET\n`);
-  saveBlob(buildPdf(out, logo), `sponsorenlauf-rangliste-${fileDate()}.pdf`);
+  d.hline(M, d.W - M, d.y); d.y += 2;
+  let x = M; ['', 'Total', '', num(sum('laps')), num(sum('bonus')), num(sum('total')), num(sum('allLaps'))].forEach((v, k) => { d.cell(cols, k, v, x, d.y, true); x += cols[k].w; });
+  d.y += d.RH + 10;
+  d.txt('Runden gesamt = (gelaufene Runden × Rundenlänge + Bonus-Meter) ÷ Rundenlänge, abgerundet.', M, d.y + 8, 8.5, false, 1);
+  saveBlob(buildPdf(d.finish(), logo), `sponsorenlauf-rangliste-${fileDate()}.pdf`);
   toast('PDF erstellt', 'ok');
+}
+
+/* Eine Seite (oder mehr) pro Spieler:in – z. B. für Sponsor:innen */
+function playerPage(d, p, s, laps){
+  const M = d.M, W = d.W, L = S.cfg.lapMeters, num = n => fmt(n);
+  d.foot = `Unihockey Tösstal · Sponsorenlauf · ${p.name}`;
+  const lh = d.image(M, d.y, 160); if (lh) d.y += lh + 20;
+  d.txt('Sponsorenlauf für den Gothia Cup', M, d.y + 10, 11, false, 1); d.y += 20;
+  d.txt(p.name, M, d.y + 22, 26, true);
+  if (p.nr) d.txt('#' + p.nr, M + textW(p.name, 26, true) + 10, d.y + 22, 14, false, 1);
+  d.y += 32;
+  const day = laps.length ? new Date(laps[0].t) : new Date();
+  d.txt(`${day.toLocaleDateString('de-CH', {weekday:'long', day:'2-digit', month:'2-digit', year:'numeric'})} · Grosshalle Turbenthal`, M, d.y + 10, 10, false, 1);
+  d.y += 26;
+  // Kennzahlen
+  const boxes = [['Runden gelaufen', num(s.laps)], ['Bonus-Meter', num(s.bonus)], ['Total Meter', num(s.total)], ['Runden gesamt', num(s.allLaps)]];
+  const gap = 8, bw = (W - 2 * M - gap * 3) / 4, bh = 64;
+  boxes.forEach(([label, val], i) => {
+    const bx = M + i * (bw + gap);
+    d.rect(bx, d.y, bw, bh, i === 3 ? '0.80 0.90 0.20' : '0.95 0.95 0.93');
+    d.txtC(val, bx + bw / 2, d.y + 32, 24, true);
+    d.txtC(label, bx + bw / 2, d.y + 51, 9, i === 3, i === 3 ? 0 : 1);
+  });
+  d.y += bh + 14;
+  d.txt(`${s.laps} Runden × ${L} m + ${num(s.bonus)} m Bonus = ${num(s.total)} m; ${num(s.total)} m ÷ ${L} m = ${s.allLaps} Runden gesamt (abgerundet)`, M, d.y + 9, 9, false, 1);
+  d.y += 30;
+  // Zielschiessen
+  d.txt('Zielschiessen', M, d.y + 11, 12, true); d.y += 18;
+  const hc = [{t:'Loch', w:110, a:'l'}, {t:'Treffer', w:70, a:'r'}, {t:'Bonus-Meter', w:90, a:'r'}];
+  d.table(hc, [180, 90, 60, 30].map(b => [`${b} m`, s.h[b], num(s.h[b] * b)]).concat([['kein Treffer', s.h[0], '0']]));
+  d.y += 22;
+  // Runden im Detail
+  if (!d.room(60)) d.newPage();
+  d.txt('Runden im Detail', M, d.y + 11, 12, true); d.y += 18;
+  if (!laps.length){ d.txt('Keine Runden erfasst.', M, d.y + 10, 10, false, 1); d.y += 20; }
+  else {
+    let cum = 0;
+    const lc = [{t:'Runde', w:60, a:'c'}, {t:'Zeit', w:80, a:'c'}, {t:'Zielschiessen', w:150, a:'l'}, {t:'Meter (Runde + Bonus)', w:120, a:'r'}, {t:'Meter kumuliert', w:105.28, a:'r'}];
+    d.table(lc, laps.map((l, i) => { const m = L + l.b; cum += m; return [i + 1, new Date(l.t).toLocaleTimeString('de-CH', {hour:'2-digit', minute:'2-digit', second:'2-digit'}), l.b ? `Treffer +${l.b} m` : 'kein Treffer', num(m), num(cum)]; }),
+      {onBreak:() => { d.txt(`${p.name} – Fortsetzung`, M, d.y + 11, 11, true); d.y += 18; }});
+  }
+  d.y += 22;
+  // Sponsor-Feld
+  if (!d.room(78)) d.newPage();
+  d.box(M, d.y, W - 2 * M, 66);
+  d.txt('Für Sponsor:innen', M + 12, d.y + 18, 10, true);
+  d.txt(`Betrag pro Runde CHF ________   ×   ${s.allLaps} Runden gesamt   =   CHF ________`, M + 12, d.y + 44, 11);
+  d.y += 76;
+}
+
+async function downloadPlayerPdf(ids){
+  const st = stats();
+  const list = ids.map(id => S.players.get(id)).filter(Boolean);
+  if (!list.length) return;
+  toast('PDF wird erstellt…');
+  const logo = await logoJpeg(), d = pdfDoc(logo);
+  list.forEach((p, i) => {
+    if (i) d.newPage();
+    const laps = [...S.laps.values()].filter(l => l.p === p.id).sort((a, b) => a.t - b.t);
+    playerPage(d, p, st.get(p.id), laps);
+  });
+  const name = list.length === 1 ? `sponsorenlauf-${slug(list[0].name)}.pdf` : `sponsorenlauf-alle-spielerinnen-${fileDate()}.pdf`;
+  saveBlob(buildPdf(d.finish(), logo), name);
+  toast('PDF erstellt', 'ok');
+}
+
+async function choosePlayerPdf(){
+  const list = sortedPlayers();
+  if (!list.length){ toast('Noch keine Spieler:innen'); return; }
+  const pre = S.players.has(S.sel) ? S.sel : '';
+  const yes = await dialog('PDF je Spieler:in',
+    `<label>Für wen?</label><select id="pdfWho" class="selbox">
+      <option value="__all">Alle Spieler:innen (je eine Seite, ${list.length} Seiten)</option>
+      ${list.map(p => `<option value="${esc(p.id)}"${p.id === pre ? ' selected' : ''}>${esc(p.name)}${p.nr ? ' #' + esc(p.nr) : ''}</option>`).join('')}
+    </select>
+    <p class="muted" style="margin:8px 0 0">Mit Kennzahlen, Zielschiessen, allen Runden mit Zeit und einem Feld für die Sponsor:innen.</p>`, 'PDF erstellen');
+  if (!yes) return;
+  const v = $('#pdfWho').value;
+  downloadPlayerPdf(v === '__all' ? list.map(p => p.id) : [v]);
 }
 
 function renderPlayers(st){
@@ -801,8 +958,10 @@ function bindUI(){
     if (e.target.closest('#undo')){ undo(); return; }
     const b = e.target.closest('[data-b]'); if (b) addLap(+b.dataset.b);
   });
-  $('#rankWrap').addEventListener('click', e => { const tr = e.target.closest('tr[data-id]'); if (tr){ S.q = ''; $('#q').value = ''; select(tr.dataset.id); show('count'); } });
+  $('#rankWrap').addEventListener('click', e => { const th = e.target.closest('th[data-sort]'); if (th){ setSort(th.dataset.sort); return; } const tr = e.target.closest('tr[data-id]'); if (tr){ S.q = ''; $('#q').value = ''; select(tr.dataset.id); show('count'); } });
   $('#pdfBtn').addEventListener('click', downloadPdf);
+  $('#pdfOneBtn').addEventListener('click', choosePlayerPdf);
+  $('#sortBar').addEventListener('click', e => { const b = e.target.closest('[data-sort]'); if (b) setSort(b.dataset.sort); });
   $('#csvBtn').addEventListener('click', downloadCsv);
   $('#addForm').addEventListener('submit', async e => {
     e.preventDefault();
