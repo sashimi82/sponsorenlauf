@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="de-CH">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#111110">
+<title>Bildschirm-Test</title>
+<style>
+  html,body{margin:0;background:#fffbe6;font:17px/1.35 -apple-system,BlinkMacSystemFont,Helvetica,Arial,sans-serif;color:#111}
+  #safeTop{position:fixed;top:0;left:0;right:0;height:env(safe-area-inset-top);background:rgba(220,30,40,.55)}
+  #topLine{position:fixed;top:0;left:0;right:0;border-top:4px solid #d4202a}
+  #bottomBar{position:fixed;left:0;right:0;bottom:0;background:#1f6fd1;color:#fff;text-align:center;font-weight:700;
+    padding:10px 0 calc(env(safe-area-inset-bottom) + 10px)}
+  #probe{position:absolute;visibility:hidden;padding-top:env(safe-area-inset-top);padding-bottom:env(safe-area-inset-bottom)}
+  main{padding:calc(env(safe-area-inset-top) + 24px) 18px 140px}
+  h1{font-size:22px;margin:0 0 6px}
+  table{border-collapse:collapse;width:100%;background:#fff;border:1px solid #ddd;border-radius:10px}
+  td{padding:8px 10px;border-bottom:1px solid #eee}
+  td:last-child{text-align:right;font-weight:700;font-variant-numeric:tabular-nums}
+  .ruler{position:fixed;right:0;top:0;width:34px;height:100%;pointer-events:none}
+  .ruler div{position:absolute;right:0;font-size:10px;color:#555;border-top:1px solid #555;width:34px;text-align:right}
+</style>
+</head>
+<body>
+<div id="safeTop"></div><div id="topLine"></div><div id="probe"></div>
+<div class="ruler" id="ruler"></div>
+<main>
+  <h1>Bildschirm-Test</h1>
+  <p>Bitte so öffnen wie die App (gleicher Weg) und einen Screenshot schicken.</p>
+  <table id="t"></table>
+  <p style="font-size:14px;color:#555">Roter Streifen oben = Bereich, den das iPhone als «Statusleiste» meldet. Blauer Balken = unterer Rand, wie die App ihn sieht.</p>
+</main>
+<div id="bottomBar">Unterer Rand (fix unten)</div>
+<script>
+function v(){
+  const p = getComputedStyle(document.getElementById('probe'));
+  const rows = [
+    ['Geöffnet als', (window.navigator.standalone || matchMedia('(display-mode: standalone)').matches) ? 'App (Home-Bildschirm)' : 'Safari / Browser'],
+    ['Statusleiste oben (safe-area)', parseFloat(p.paddingTop) + ' px'],
+    ['Unten (safe-area)', parseFloat(p.paddingBottom) + ' px'],
+    ['Fensterhöhe', window.innerHeight + ' px'],
+    ['Sichtbare Höhe', Math.round(window.visualViewport ? visualViewport.height : innerHeight) + ' px'],
+    ['Bildschirmhöhe', screen.height + ' px'],
+    ['Breite', window.innerWidth + ' px'],
+    ['iOS', ((navigator.userAgent.match(/OS (\d+)_(\d+)/) || []).slice(1).join('.')) || '–'],
+    ['Safari-Version', ((navigator.userAgent.match(/Version\/([\d.]+)/) || [])[1]) || '–']
+  ];
+  document.getElementById('t').innerHTML = rows.map(r => `<tr><td>${r[0]}</td><td>${r[1]}</td></tr>`).join('');
+  const ru = document.getElementById('ruler'); ru.innerHTML = '';
+  for (let y = 0; y < innerHeight; y += 50){ const d = document.createElement('div'); d.style.top = y + 'px'; d.textContent = y; ru.appendChild(d); }
+}
+v(); addEventListener('resize', v); if (window.visualViewport) visualViewport.addEventListener('resize', v);
+</script>
+</body>
+</html>
