@@ -198,6 +198,10 @@
   th.sortable.on{color:var(--ink)}
   .dl{flex-wrap:wrap}.dl .btn{flex:1 1 140px}
   .selbox{width:100%;border:1px solid var(--line);border-radius:10px;padding:10px;margin:4px 0;background:#fff;font-size:16px}
+
+  /* Mittelweg: Inhalt fliesst von oben, Namensliste nur so hoch wie nötig */
+  #v-count:not([hidden]){height:auto;min-height:0;display:block}
+  .grid{flex:none;min-height:0;max-height:max(84px,calc(100dvh - 545px));overflow:auto;margin:8px 0 10px}
 </style>
 </head>
 <body>
@@ -305,8 +309,7 @@ const T_BACK = Object.fromEntries(Object.entries(T).map(([k, v]) => [v, k]));
 
 /* Torwand wie auf dem Foto: x/y = Mitte in % der Torbreite/-höhe, w = Durchmesser in % der Breite */
 const HOLES = [
-  {b:180,x:10,y:21,w:14},{b:90,x:33,y:41,w:17},{b:90,x:65,y:27,w:17},
-  {b:180,x:90,y:21,w:14},{b:60,x:22,y:72,w:19},{b:30,x:72,y:66,w:22}
+  {b:30,x:16,y:50,w:26},{b:60,x:44,y:50,w:22},{b:90,x:68,y:50,w:19},{b:180,x:89,y:50,w:16}
 ];
 const BONUS_OK = [0,30,60,90,180];
 const POLL_MS = 20000;
