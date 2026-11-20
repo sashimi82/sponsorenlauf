@@ -216,6 +216,9 @@
   header{padding:calc(env(safe-area-inset-top) + 20px) 18px 16px}
   nav{padding-bottom:calc(env(safe-area-inset-bottom) + 8px)}
   @media (display-mode: standalone){ nav{padding-bottom:max(calc(env(safe-area-inset-bottom) + 8px), 26px)} }
+
+  .roundbar{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:0 0 10px}
+  .roundbar .seg button{padding:6px 10px;font-size:13px}
 </style>
 </head>
 <body>
@@ -254,6 +257,7 @@
   <!-- ÜBERSICHT -->
   <section id="v-rank" hidden>
     <div class="sum" id="sum"></div>
+    <div class="roundbar"><span class="muted">Runden gesamt:</span><div class="seg" id="roundSeg"><button data-r="floor">Abrunden</button><button data-r="round">Kaufmännisch</button><button data-r="ceil">Aufrunden</button></div></div>
     <div class="sortbar" id="sortBar"></div>
     <div id="rankWrap"></div>
     <div class="dl">
@@ -261,7 +265,7 @@
       <button class="btn" id="pdfOneBtn">PDF je Spieler:in</button>
       <button class="btn ghost" id="csvBtn">CSV (Excel)</button>
     </div>
-    <p class="muted">Runden gesamt = (gelaufene Runden × Rundenlänge + Bonus-Meter) ÷ Rundenlänge, abgerundet. Rang = Platz nach Total Meter. Tippe eine Zeile an, um zu dieser Person zu springen.</p>
+    <p class="muted">Runden gesamt = (gelaufene Runden × Rundenlänge + Bonus-Meter) ÷ Rundenlänge, <span id="roundTxt">kaufmännisch gerundet</span>. Rang = Platz nach Total Meter. Tippe eine Zeile an, um zu dieser Person zu springen.</p>
   </section>
 
   <!-- SPIELER:INNEN -->
@@ -342,7 +346,7 @@ const DEVICE = ls.get('slauf-device', null) || (() => { const d = rid(); ls.set(
 const S = {
   sb:null, players:new Map(), laps:new Map(), cfg:{lapMeters:180},
   sel: ls.get('slauf-sel', null), view:'count', filter: ls.get('slauf-filter','all'), q:'',
-  mine: new Set(ls.get('slauf-mine', [])), sort: ls.get('slauf-sort', {k:'name', dir:'asc'}), lock:false, loaded:false,
+  mine: new Set(ls.get('slauf-mine', [])), sort: ls.get('slauf-sort', {k:'name', dir:'asc'}), round: ls.get('slauf-round', 'round'), lock:false, loaded:false,
   net:'connecting',            // connecting | live | poll | offline
   queue: ls.get('slauf-queue', []), flushing:false
 };
@@ -520,9 +524,22 @@ function stats(){
     s.laps++; s.bonus += l.b; s.h[l.b]++;
     if (!s.last || l.t > s.last.t) s.last = l;
   }
-  for (const s of m.values()){ s.lapM = s.laps * S.cfg.lapMeters; s.total = s.lapM + s.bonus; s.allLaps = Math.floor(s.total / S.cfg.lapMeters); s.rest = s.total - s.allLaps * S.cfg.lapMeters; }
+  for (const s of m.values()){ s.lapM = s.laps * S.cfg.lapMeters; s.total = s.lapM + s.bonus; s.allLaps = roundLaps(s.total, S.cfg.lapMeters); }
   return m;
 }
+/* Runden gesamt aus Metern: abrunden, kaufmännisch (ab halber Runde auf) oder aufrunden – ganzzahlig gerechnet */
+const ROUND = {
+  floor:{label:'Abrunden', txt:'abgerundet'},
+  round:{label:'Kaufmännisch', txt:'kaufmännisch gerundet, ab ½ Runde auf'},
+  ceil: {label:'Aufrunden', txt:'aufgerundet'}
+};
+function roundLaps(total, L){
+  const rem = total % L, base = (total - rem) / L;
+  if (S.round === 'floor') return base;
+  if (S.round === 'ceil') return rem > 0 ? base + 1 : base;
+  return rem * 2 >= L ? base + 1 : base;
+}
+const roundTxt = () => (ROUND[S.round] || ROUND.round).txt;
 const byName = (a, b) => a.name.localeCompare(b.name, 'de', {sensitivity:'base'});
 const sortedPlayers = () => [...S.players.values()].sort(byName);
 
@@ -597,6 +614,8 @@ function overviewRows(st){
 }
 
 function renderRank(st){
+  document.querySelectorAll('#roundSeg button').forEach(b => b.classList.toggle('on', b.dataset.r === S.round));
+  $('#roundTxt').textContent = roundTxt();
   const rows = overviewRows(st);
   const totLaps = rows.reduce((a, r) => a + r.s.laps, 0), totAll = rows.reduce((a, r) => a + r.s.allLaps, 0);
   $('#sum').innerHTML = `<div><b>${rows.length}</b><span>Spieler:innen</span></div><div><b>${fmt(totLaps)}</b><span>Runden gelaufen</span></div><div><b>${fmt(totAll)}</b><span>Runden gesamt</span></div>`;
@@ -771,7 +790,7 @@ async function downloadPdf(){
   d.hline(M, d.W - M, d.y); d.y += 2;
   let x = M; ['', 'Total', '', num(sum('laps')), num(sum('bonus')), num(sum('total')), num(sum('allLaps'))].forEach((v, k) => { d.cell(cols, k, v, x, d.y, true); x += cols[k].w; });
   d.y += d.RH + 10;
-  d.txt('Runden gesamt = (gelaufene Runden × Rundenlänge + Bonus-Meter) ÷ Rundenlänge, abgerundet.', M, d.y + 8, 8.5, false, 1);
+  d.txt(`Runden gesamt = (gelaufene Runden × Rundenlänge + Bonus-Meter) ÷ Rundenlänge, ${roundTxt()}.`, M, d.y + 8, 8.5, false, 1);
   saveBlob(buildPdf(d.finish(), logo), `sponsorenlauf-rangliste-${fileDate()}.pdf`);
   toast('PDF erstellt', 'ok');
 }
@@ -798,7 +817,7 @@ function playerPage(d, p, s, laps){
     d.txtC(label, bx + bw / 2, d.y + 51, 9, i === 3, i === 3 ? 0 : 1);
   });
   d.y += bh + 14;
-  d.txt(`${s.laps} Runden × ${L} m + ${num(s.bonus)} m Bonus = ${num(s.total)} m; ${num(s.total)} m ÷ ${L} m = ${s.allLaps} Runden gesamt (abgerundet)`, M, d.y + 9, 9, false, 1);
+  d.txt(`${s.laps} Runden × ${L} m + ${num(s.bonus)} m Bonus = ${num(s.total)} m; ${num(s.total)} m ÷ ${L} m = ${s.allLaps} Runden gesamt (${roundTxt()})`, M, d.y + 9, 9, false, 1);
   d.y += 30;
   // Zielschiessen
   d.txt('Zielschiessen', M, d.y + 11, 12, true); d.y += 18;
@@ -978,6 +997,7 @@ function bindUI(){
   $('#rankWrap').addEventListener('click', e => { const th = e.target.closest('th[data-sort]'); if (th){ setSort(th.dataset.sort); return; } const tr = e.target.closest('tr[data-id]'); if (tr){ S.q = ''; $('#q').value = ''; select(tr.dataset.id); show('count'); } });
   $('#pdfBtn').addEventListener('click', downloadPdf);
   $('#pdfOneBtn').addEventListener('click', choosePlayerPdf);
+  $('#roundSeg').addEventListener('click', e => { const b = e.target.closest('[data-r]'); if (!b || !ROUND[b.dataset.r]) return; S.round = b.dataset.r; ls.set('slauf-round', S.round); renderAll(); toast('Runden gesamt: ' + ROUND[S.round].label); });
   $('#sortBar').addEventListener('click', e => { const b = e.target.closest('[data-sort]'); if (b) setSort(b.dataset.sort); });
   $('#csvBtn').addEventListener('click', downloadCsv);
   $('#addForm').addEventListener('submit', async e => {
